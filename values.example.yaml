@@ -1,0 +1,115 @@
+# Global image settings
+image:
+  # Docker Hub:
+  repository: docspringcom/docspring-enterprise
+  # AWS ECR:
+  # repository: 691950705664.dkr.ecr.us-east-1.amazonaws.com/docspring/enterprise
+  tag: "latest"
+  # We recommend using a specific release tag instead of "latest" for production deployments,
+  # tag: "08a62b95"
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    - name: dockerhub-secret
+
+sharedEnv:
+  DOMAIN_NAME: "docspring-enterprise.localhost"
+  # DATABASE_URL: "postgres://test_user:test_password@docspring-enterprise-postgres:5432/docspring_enterprise"
+  # REDIS_URL: "redis://docspring-enterprise-redis:6379"
+  SECRET_KEY_BASE: "<64 byte hex secret>"
+  SUBMISSION_DATA_ENCRYPTION_KEY: "<32 byte hex secret>"
+  DOCSPRING_LICENSE: "<DocSpring license key>"
+
+deploymentStrategy: RollingUpdate
+# Use the Recreate deployment strategy during testing/development for quicker updates.
+# deploymentStrategy: Recreate
+
+# Web Service Configuration
+web:
+  replicas: 3 # minimum scale count
+  strategy: RollingUpdate
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 90
+  resources:
+    limits:
+      memory: "1400Mi"
+      cpu: "600m"
+    requests:
+      memory: "1400Mi"
+      cpu: "600m"
+  command: ["run_as_deploy", "foreman", "start", "-m", "web=1"]
+  env:
+    # "/health/site" is a minimal health check that doesn't include the database/redis check.
+    # Use this healthcheck during your initial deployment.
+    HEALTH_CHECK_PATH: "/health/site"
+    # Uncomment the following line to use the full health check once the database is ready.
+    # HEALTH_CHECK_PATH: "/health"
+    WEB_CONCURRENCY: "2"
+    RAILS_MAX_THREADS: "5"
+    REQUEST_TIMEOUT: "30"
+    FORCE_SSL: "true"
+    PORT: "4001"
+    # Uncomment the following line to access the service on port 4001 instead of 80/443.
+    # PUBLIC_PORT: "4001"
+  port: 4001
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "32k"
+
+# Worker Service Configuration
+worker:
+  replicas: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 90
+  resources:
+    limits:
+      memory: "2000Mi"
+      cpu: "700m"
+    requests:
+      memory: "2000Mi"
+      cpu: "700m"
+  command: ["run_as_deploy", "foreman", "start", "-m", "worker=1"]
+  securityContext:
+    privileged: true
+
+# CronJobs
+cronjobs:
+  update_submissions:
+    enabled: true
+    schedule: "0 3 * * ?"
+    command: ["run_as_deploy", "rake", "submissions:enqueue_expiry_jobs"]
+    jobTemplate:
+      resources:
+        limits:
+          memory: "512Mi"
+          cpu: "250m"
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+
+# The following resource definitions are provided for testing purposes
+# and are not intended for production use. Set enabled to true when testing locally.
+resources:
+  postgres:
+    enabled: false
+    auth:
+      username: test_user
+      password: test_password
+      database: docspring_enterprise
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+
+  redis:
+    enabled: false
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 50m

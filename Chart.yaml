@@ -1,0 +1,6 @@
+apiVersion: v2
+name: docspring-enterprise
+description: A Helm chart for deploying the DocSpring Enterprise application
+version: 1.0.0
+appVersion: "1.0"
+icon: https://docspring.com/logo.png

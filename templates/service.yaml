@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "docspring-enterprise.name" . }}
+  labels:
+    app: {{ include "docspring-enterprise.name" . }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.web.port }}
+      targetPort: {{ .Values.web.port }}
+      protocol: TCP
+  selector:
+    app: {{ include "docspring-enterprise.name" . }}
+    component: web

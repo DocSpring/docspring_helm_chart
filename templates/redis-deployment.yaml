@@ -1,0 +1,32 @@
+{{- if .Values.resources.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docspring-enterprise.name" . }}-redis
+  labels:
+    app: {{ include "docspring-enterprise.name" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "docspring-enterprise.name" . }}
+      component: redis
+  template:
+    metadata:
+      labels:
+        app: {{ include "docspring-enterprise.name" . }}
+        component: redis
+    spec:
+      containers:
+        - name: redis
+          image: bitnami/redis:latest
+          ports:
+            - containerPort: 6379
+          env:
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "yes"
+          resources:
+            requests:
+              memory: {{ .Values.resources.redis.resources.requests.memory }}
+              cpu: {{ .Values.resources.redis.resources.requests.cpu }}
+{{- end }}

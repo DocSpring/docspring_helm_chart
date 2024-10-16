@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docspring-enterprise.name" . }}-web
+  labels:
+    app: {{ include "docspring-enterprise.name" . }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  strategy:
+    type: {{ .Values.deploymentStrategy }}
+  selector:
+    matchLabels:
+      app: {{ include "docspring-enterprise.name" . }}
+      component: web
+  template:
+    metadata:
+      labels:
+        app: {{ include "docspring-enterprise.name" . }}
+        component: web
+    spec:
+      imagePullSecrets:
+        - name: {{ index .Values.image.pullSecrets 0 "name" }}
+      containers:
+        - name: web
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            {{- toYaml .Values.web.command | nindent 12 }}
+          env:
+            {{- include "docspring-enterprise.sharedEnvVars" . | nindent 12 }}
+            {{- range $key, $value := .Values.web.env }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+          ports:
+            - containerPort: {{ .Values.web.port }}
+          resources:
+            limits:
+              memory: {{ .Values.web.resources.limits.memory }}
+              cpu: {{ .Values.web.resources.limits.cpu }}
+            requests:
+              memory: {{ .Values.web.resources.requests.memory }}
+              cpu: {{ .Values.web.resources.requests.cpu }}

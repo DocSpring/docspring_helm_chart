@@ -1,0 +1,16 @@
+{{- if .Values.resources.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "docspring-enterprise.name" . }}-postgres
+  labels:
+    app: {{ include "docspring-enterprise.name" . }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: {{ include "docspring-enterprise.name" . }}
+    component: postgres
+{{- end }}

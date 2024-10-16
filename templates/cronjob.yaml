@@ -1,0 +1,24 @@
+{{ if .Values.cronjobs.update_submissions.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "docspring-enterprise.name" . }}-update-submissions
+spec:
+  schedule: "{{ .Values.cronjobs.update_submissions.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: {{ include "docspring-enterprise.name" . }}-update-submissions
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              command: {{ .Values.cronjobs.update_submissions.command }}
+              resources:
+                limits:
+                  memory: {{ .Values.cronjobs.update_submissions.jobTemplate.resources.limits.memory }}
+                  cpu: {{ .Values.cronjobs.update_submissions.jobTemplate.resources.limits.cpu }}
+                requests:
+                  memory: {{ .Values.cronjobs.update_submissions.jobTemplate.resources.requests.memory }}
+                  cpu: {{ .Values.cronjobs.update_submissions.jobTemplate.resources.requests.cpu }}
+          restartPolicy: OnFailure
+{{ end }}

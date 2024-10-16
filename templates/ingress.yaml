@@ -1,0 +1,22 @@
+{{- if .Values.web.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "docspring-enterprise.name" . }}-web
+  annotations:
+    {{- range $key, $value := .Values.web.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  rules:
+    - host: {{ .Values.sharedEnv.DOMAIN_NAME }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "docspring-enterprise.name" . }}-web
+                port:
+                  number: {{ .Values.web.port }}
+{{- end }}
